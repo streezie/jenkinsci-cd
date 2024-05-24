@@ -1,0 +1,42 @@
+pipeline{
+    agent any
+    
+    environment{
+        DOCKERHUB_CREDENTIALS=credentials('dockerhub.com')
+    }
+    
+    stages{
+        stage('Git checkout'){
+            steps {
+                checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/streezie/cicd-pipeline-train-schedule-autodeploy.git']])
+            }
+        }
+        
+        stage('docker image build'){
+            steps {
+                sh 'docker build -t streezie/autodeploy2 .'
+            
+            }
+        }
+        
+        stage('dockerhub login'){ 
+            steps{ 
+                sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                
+            }
+            
+        }
+            
+        stage('docker push to registry'){
+            steps{
+                sh 'docker push streezie/autodeploy2' 
+            }
+        }
+        
+        stage('docker logout'){
+            steps{
+                sh 'docker logout'
+            }
+        }
+    }
+}

@@ -1,0 +1,55 @@
+pipeline {
+
+  environment {
+    dockerimagename = "streezie/autodeploy3"
+    dockerImage = ""
+  }
+
+  agent any
+
+  stages {
+
+    stage('Checkout Source') {
+      steps {
+        checkout scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'dfe32467-5666-45ab-9c61-a782b587ffce', url: 'https://github.com/streezie/cicd-pipeline-train-schedule-autodeploy.git']])
+      }
+    }
+
+    stage('Build image') {
+      steps{
+        script {
+          dockerImage = docker.build dockerimagename
+        }
+      }
+    }
+
+    stage('Pushing Image') {
+      environment {
+               registryCredential = 'dockerhub.com'
+           }
+      steps{
+        script {
+          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
+            dockerImage.push("latest")
+          }
+        }
+      }
+    }
+
+    stage('git clone to local '){
+        steps{
+            
+            git 'https://github.com/streezie/cicd-pipeline-train-schedule-autodeploy.git'
+            
+            sh 'kubectl --kubeconfig=/home/uk/.kube/config apply -f /var/lib/jenkins/workspace/deploy-kubernetes/deployment.yaml --validate=false'
+            
+            
+            
+        }
+    }
+    
+
+
+  }
+
+}

@@ -1,0 +1,11 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Execute ansible playbook') {
+            steps {
+                ansiblePlaybook credentialsId: 'password', installation: 'Ansible', inventory: '/etc/ansible/hosts', playbook: '/etc/ansible/provision.yaml', vaultTmpPath: ''
+            }
+        }
+    }
+}
